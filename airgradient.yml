@@ -1,0 +1,109 @@
+esphome:
+  name: airgradient
+  platform: ESP8266
+  board: d1_mini
+
+font:
+  - file: "fonts/OpenSans-Regular.ttf"
+    id: opensans10
+    size: 10
+
+  - file: "fonts/OpenSans-Regular.ttf"
+    id: opensans15
+    size: 15
+
+uart:
+  - rx_pin: D5
+    tx_pin: D6
+    baud_rate: 9600
+    id: pms5003
+
+  - rx_pin: D4
+    tx_pin: D3
+    baud_rate: 9600
+    id: SenseAir
+
+i2c:
+  sda: D2
+  scl: D1
+  scan: false
+
+sensor:
+  - platform: pmsx003
+    type: PMSX003
+
+    pm_1_0:
+      name: "Particulate Matter <1.0µm Concentration"
+      id: pm1
+    pm_2_5:
+      name: "Particulate Matter <2.5µm Concentration"
+      id: pm25
+    pm_10_0:
+      name: "Particulate Matter <10.0µm Concentration"
+      id: pm10
+
+    pm_0_3um:
+      name: pm_0_3um
+    pm_0_5um:
+      name: pm_0_5um
+    pm_1_0um:
+      name: pm_1_0um
+    pm_2_5um:
+      name: pm_2_5um
+    pm_5_0um:
+      name: pm_5_0um
+    pm_10_0um:
+      name: pm_10_0um
+
+    uart_id: pms5003
+
+  - platform: sht3xd
+    temperature:
+      name: "Temperature"
+      id: temp
+    humidity:
+      name: "Humidity"
+      id: humid
+    address: 0x44
+    update_interval: 30s
+
+  - platform: senseair
+    co2:
+      name: "SenseAir CO2"
+      id: co2
+    update_interval: 5s
+    uart_id: SenseAir
+
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 64x48"
+    address: 0x3C
+    lambda: |-
+      it.printf(0, 0, id(opensans15), "%.1f°C", id(temp).state );
+      it.printf(0, 15, id(opensans10), "HUM %.1f%%", id(humid).state );
+      it.printf(0, 25, id(opensans10), "CO2 %.0fppm", id(co2).state );
+      it.printf(0, 35, id(opensans10), "PM2.5 %.0fppm", id(pm25).state);
+
+# Enable logging
+logger:
+
+mqtt:
+  broker: mqtt.example.com
+  username: mqtt_username
+  password: mqtt_password
+
+ota:
+  password: ""
+
+wifi:
+  domain: wifi.domain.example.com
+  ssid: wifi_ssid
+  password: super_secret_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Airgradient Fallback"
+    password: another_super_secret_password
+
+captive_portal:
